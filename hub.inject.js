@@ -1,4 +1,5 @@
 import * as moment from "moment"
+import * as data from "/dest/atlas.js"
 
 AFRAME.registerSystem('clock', {
 	init: function () {
@@ -105,112 +106,147 @@ AFRAME.registerSystem('clock', {
 });
 
 AFRAME.registerSystem('posters', {
-	init: function() {
-	  var inbloc = this.inbloc = false;
-	  var k = this.k = 10; //number of posters in a row
-	  var gap = this.gap = 10; //gap b/w each poster
-	  var loader = this.loader = new THREE.TextureLoader();
-	  var material = new THREE.MeshBasicMaterial({
-	  map: loader.load('https://s3.amazonaws.com/duhaime/blog/tsne-webgl/data/100-img-atlas.jpg')
-	  });
-	  var blocks = this.blocks = [];
-	  var image = {width: 128, height: 128};
-	  var atlas = {width: 1280, height: 1280, cols: 10, rows: 10};
+    init: function() {
+      var inbloc = this.inbloc = [-1,-1];
+      const scale = this.scale = 200; // image size/200 = size in VR
 
-	  for (var j=0; j<2; j++) {
-		for (var i = 0; i < k; i ++) {
-		  var coords = {
-			x: i*(image.width+gap),
-			y: 0,
-			z: 0 - j * 200
-		  };
-		  var geometry = new THREE.Geometry();
-		  
-		  geometry.vertices.push(
-			new THREE.Vector3(
-			coords.x,
-			coords.y,
-			coords.z
-			),
-			new THREE.Vector3(
-			coords.x + image.width,
-			coords.y,
-			coords.z
-			),
-			new THREE.Vector3(
-			coords.x + image.width,
-			coords.y + image.height,
-			coords.z
-			),
-			new THREE.Vector3(
-			coords.x,
-			coords.y + image.height,
-			coords.z
-			)
-		  );
-		  var faceOne = new THREE.Face3(
-			geometry.vertices.length-4,
-			geometry.vertices.length-3,
-			geometry.vertices.length-2
-		  )
-		  var faceTwo = new THREE.Face3(
-			geometry.vertices.length-4,
-			geometry.vertices.length-2,
-			geometry.vertices.length-1
-		  )
-		  geometry.faces.push(faceOne, faceTwo);
-		  
-		  var xOffset = i*(image.width / atlas.width);
-		  var yOffset = j*(image.height / atlas.height);
-		  
-		  geometry.faceVertexUvs[0].push([
-			new THREE.Vector2(xOffset, yOffset),
-			new THREE.Vector2(xOffset+.1, yOffset),
-			new THREE.Vector2(xOffset+.1, yOffset+.1)
-		  ]);
+      const coordsData = data.default.frames;
+      var coordsArray = this.coordsArray = [];
+      var linkArray = this.linkArray = []
+      for (const property in coordsData) {
+        this.coordsArray.push(coordsData[property].frame);
+        this.linkArray.push('src/' + property+'.jpg');
+      }
 
-		  geometry.faceVertexUvs[0].push([
-			new THREE.Vector2(xOffset, yOffset),
-			new THREE.Vector2(xOffset+.1, yOffset+.1),
-			new THREE.Vector2(xOffset, yOffset+.1)
-		  ]);
-		  var block = new THREE.Mesh(geometry, material)
-		  block.position.set(-2, 1, 0);
-		  block.scale.set(0.02,0.02,0.02);
-		  blocks.push(block);
-		  this.el.object3D.add(blocks[blocks.length-1])
-		}
-	  }
-	  // console.log(this.el.object3D.children[0].position)
-	},
-	tick: function() {
-	  var pos = this.el.object3D.children[0].position;
-	  if (this.inbloc == false && pos.x > -1 && pos.x < 1) {
-		  console.log(pos.x)
-		  console.log("enter")
-		  this.loadPoster(0,0);
-		  this.inbloc = true;
-	  }
-	  if (this.inbloc == true && (pos.x < -1 || pos.x > 1)) {
-		  console.log(pos.x)
-		  console.log("leave")
-		  this.leave(0,0);
-		  this.inbloc = false;
-	  }
-	},
-	loadPoster(i, j) {
-	  //i,j coords of the poster
-	  this.blocks[i+j*this.k].visible = false;
-	  var mat1 = new THREE.MeshBasicMaterial({
-		  map: this.loader.load('https://s3.amazonaws.com/duhaime/blog/tsne-webgl/data/100-img-atlas.jpg')
-	  });
-	  var geo1 = new THREE.PlaneGeometry( 2.56, 2.56);
-	  var plane = new THREE.Mesh(geo1, mat1);
-	  plane.position.set(-0.72 + i*2.76, 1+1.28, 0 - j* 4);
-	  this.el.object3D.add(plane);
-	},
-	leave(i, j) {
-	  this.el.object3D.remove(this.el.object3D.children[this.el.object3D.children.length -1]);
-	  this.blocks[i+j*this.k].visible = true;
-	}
+      var k = this.k = 3; //number of posters in a row
+    
+      var planeMat = new THREE.MeshBasicMaterial( {color: "grey"} );
+
+      var loader = this.loader = new THREE.TextureLoader();
+      var material = new THREE.MeshBasicMaterial({
+      map: loader.load('./dest/atlas.png')
+      });
+      var blocks = this.blocks = []; 
+      var atlas = {width: 1000, height: 1000, cols: 2, rows: 3};
+
+      for (var j=0; j<2; j++) {
+        for (var i = 0; i < k; i ++) {
+          var idx = j*k + i
+          var image = {width: coordsArray[idx].w/scale, height: coordsArray[idx].h/scale}; 
+          var coords = {
+            x: i * 4,
+            y: 0,
+            z: 0 - j * 2
+          };
+          var geometry = new THREE.Geometry();
+          
+          geometry.vertices.push(
+            new THREE.Vector3(
+            coords.x,
+            coords.y,
+            coords.z
+            ),
+            new THREE.Vector3(
+            coords.x + image.width,
+            coords.y,
+            coords.z
+            ),
+            new THREE.Vector3(
+            coords.x + image.width,
+            coords.y + image.height,
+            coords.z
+            ),
+            new THREE.Vector3(
+            coords.x,
+            coords.y + image.height,
+            coords.z
+            )
+          );
+          var faceOne = new THREE.Face3(
+            geometry.vertices.length-4,
+            geometry.vertices.length-3,
+            geometry.vertices.length-2
+          )
+          var faceTwo = new THREE.Face3(
+            geometry.vertices.length-4,
+            geometry.vertices.length-2,
+            geometry.vertices.length-1
+          )
+          geometry.faces.push(faceOne, faceTwo);
+          
+          var xOffset = coordsArray[idx].x / atlas.width;
+          var xRange = coordsArray[idx].w / atlas.width;
+          var yOffset =  1- (coordsArray[idx].y + coordsArray[idx].h)/atlas.height
+          var yRange = coordsArray[idx].h / atlas.height;
+          
+          geometry.faceVertexUvs[0].push([
+            new THREE.Vector2(xOffset, yOffset),
+            new THREE.Vector2(xOffset+xRange, yOffset),
+            new THREE.Vector2(xOffset+xRange, yOffset+yRange)
+          ]);
+
+          geometry.faceVertexUvs[0].push([
+            new THREE.Vector2(xOffset, yOffset),
+            new THREE.Vector2(xOffset+xRange, yOffset+yRange),
+            new THREE.Vector2(xOffset, yOffset+yRange)
+          ]);
+          var block = new THREE.Mesh(geometry, material)
+          block.position.set(-2, 1, 0);
+          blocks.push(block);
+          this.el.object3D.add(blocks[blocks.length-1])
+
+          var planeGeo = new THREE.BoxGeometry( image.width, image.height, 0.05 );
+          var plane = new THREE.Mesh(planeGeo, planeMat);
+          plane.position.set(coords.x+image.width/2,coords.y + image.height/2, coords.z - 0.05/1.9);
+          block.add(plane)
+        }
+      }
+    },
+    tick: function() {
+      close = false;
+      var pos = this.el.object3D.children[0].position;
+      for (var i = 0; i < this.blocks.length; i++) {
+          var block_pos = {x:-2 + i%this.k*4 + this.coordsArray[i].w/this.scale/2,
+                          y: 1.6,
+                          z: 0 - Math.floor(i/this.k)*2}
+          var dis = this.dis(block_pos, pos);
+          if (dis < 1 ) {
+              close = true;
+              if (this.inbloc[0] == -1) {
+                  console.log("enter")
+                  console.log(Math.floor(i/this.k), i %this.k)
+                  this.loadPoster(Math.floor(i/this.k), i %this.k);
+                  this.inbloc = [Math.floor(i/this.k), i %this.k];
+                  break;
+              }
+          }
+      }
+      if (close == false && this.inbloc[0] != -1 && this.inbloc[1] != -1) {
+          console.log(this.inbloc)
+          console.log("leave")
+          this.leave(this.inbloc[0], this.inbloc[1]);
+          this.inbloc = [-1,-1];
+      }
+    },
+    loadPoster(i, j) {
+      //i,j coords of the poster
+      var idx = j+i*this.k
+      var coords = this.coordsArray[idx];
+      this.blocks[idx].visible = false;
+      // console.log(this.linkArray[idx]);
+      var mat1 = new THREE.MeshBasicMaterial({
+          map: this.loader.load(this.linkArray[idx])
+      });
+      var geo1 = new THREE.PlaneGeometry( coords.w/this.scale, coords.h/this.scale);
+      var plane = new THREE.Mesh(geo1, mat1);
+      plane.position.set(-2 + coords.w/this.scale/2 + j*4, 1+coords.h/this.scale/2, 0 - i* 2);
+      this.el.object3D.add(plane);
+    },
+    leave(i, j) {
+      this.el.object3D.remove(this.el.object3D.children[this.el.object3D.children.length -1]);
+      this.blocks[i*this.k + j].visible = true;
+    },
+    dis(i, j) {
+      return Math.pow(i.x - j.x, 2) + Math.pow(i.y - j.y, 2) + Math.pow(i.z - j.z, 2);
+    }
 });
