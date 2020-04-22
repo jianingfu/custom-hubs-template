@@ -28,7 +28,12 @@ For more complex changes, you can patch Hubs directly without needing to fork it
 2) Execute `npm run makepatch` to create a new patch file 
 3) Rename the patch file saved in `patches/RENAME_ME.patch`
 
-## Notes for Added Feature
+## Notes for Added Features
+
+*not able to find/locate the json files in the import statement in this template*
+
+### Clock
+implemented a digital & analog clock with Threejs.
 
 ### Construct Texture Atlas
 
@@ -39,6 +44,13 @@ To construct a texture atlas:
 - `gulp`
 - The image file and json file will be in the `dest` folder.
 - add `export default` before the every first `{` in `atlas.json` and rename the file to `atlas.js`
+
+The basic logic is mapping different parts of a texture atlas to poster boards, when the carema position is close to on poster, replace the texture with a high resolution picture.
+
+### EventTree
+
+used twison *https://github.com/lazerwalker/twison* to convert Twine story format to JSON.
+The goal is to append each node with separate/independent animation, and users able to trigger events to go through the nodes according to the JSON data.
 
 
 
