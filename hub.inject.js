@@ -1,5 +1,7 @@
 import * as moment from "moment"
+//Importing js file not working in hubs templete
 import * as data from "/dest/atlas.js"
+import * as treeData from "./treeData.js"
 
 AFRAME.registerSystem('clock', {
 	init: function () {
@@ -250,3 +252,50 @@ AFRAME.registerSystem('posters', {
       return Math.pow(i.x - j.x, 2) + Math.pow(i.y - j.y, 2) + Math.pow(i.z - j.z, 2);
     }
 });
+
+AFRAME.registerSystem('events', {
+    init: function() {
+        console.log(this.el.object3D.children)
+        let objs = treeData.default.passages
+        console.log(objs)
+        let bxs = this.bxs = [];
+
+        var geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
+        var material = new THREE.MeshBasicMaterial( {color: 0x0f8f00} );
+
+        var orig = new THREE.Mesh( geometry, material );
+        orig.position.set(0, 0 ,-3)
+        this.el.object3D.add( orig );
+
+        for (let i = 1; i < objs.length; i ++) {
+            var bx = new THREE.Mesh( geometry, material );
+            bx.position.set(0, 0, -i*2);
+            // bx.visible = false;
+            bxs.push(bx)
+            orig.add( bx );
+        }
+
+    },
+    // tick: function() {
+    //     console.log(this.el.object3D.children[2])
+    //     this.raycaster.setFromCamera( mouse, camera );
+
+    //     // calculate objects intersecting the picking ray
+    //     var intersects = this.raycaster.intersectObjects( this.bxs );
+
+    //     for ( var i = 0; i < intersects.length; i++ ) {
+    //         console.log(intersects[i])
+    //         // intersects[ i ].object.material.color.set( 0xff0000 );
+    //         for(let j = 0; j < (intersects[i].links).length; j++) {
+    //             bxs[(intersects[i].links)[j].pid].visible = true;
+    //         }
+    //     }
+    // },
+    // isClicked(i) {
+    //     console.log(i + 'th clicked');
+    //     console.log(objs[idx].text)
+    //     for(let j = 0; j < (objs[i].links).length; j++) {
+    //         bxs[(objs[i].links)[j].pid].visible = true;
+    //     }
+    // }
+})
